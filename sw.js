@@ -1,6 +1,6 @@
 /* Service worker ของสมุดเวท: เก็บไฟล์ไว้ในเครื่องให้เปิดใช้ได้ตอนไม่มีเน็ต
    เมื่อแก้ไขแอปแล้วอัปโหลดใหม่ ให้เปลี่ยนเลขเวอร์ชันของ CACHE ด้านล่าง เครื่องที่ติดตั้งไว้จะได้รับไฟล์ใหม่ */
-var CACHE = 'samutwet-v3';
+var CACHE = 'samutwet-v4';
 var CORE = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', function (e) {
