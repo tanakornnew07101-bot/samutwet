@@ -1,0 +1,842 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#EDF0EE" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F1412" media="(prefers-color-scheme: dark)">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="สมุดเวท">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font:14px system-ui,sans-serif}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<title>สมุดเวท</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=Kanit:wght@500;600&display=swap">
+<style>
+/* Layout: สมุดจดตารางเวท คอลัมน์เดียว แถบสัปดาห์ติดบน, แท็บวัน 4 ช่อง, การ์ดท่าเรียงลงมา
+   สีมาจากแผ่นน้ำหนักบาร์เบล: น้ำเงิน 20 กก. = สีหลัก, เขียว 10 กก. = เพิ่มน้ำหนัก, เหลือง 15 กก. = Deload, แดง 25 กก. = ต้องคงเดิม */
+:root {
+  --bg: #EDF0EE;
+  --surface: #FAFBFA;
+  --ink: #17201C;
+  --muted: #55645D;
+  --line: #D3DAD6;
+  --field: #FFFFFF;
+  --accent: #2A58A3;
+  --on-accent: #FFFFFF;
+  --accent-soft: #DCE6F6;
+  --up: #1F7A4B;
+  --up-soft: #D8EEE1;
+  --deload: #8A6600;
+  --deload-soft: #F6EBC6;
+  --hold: #A9342D;
+  --hold-soft: #F6DCD8;
+  --font-display: "Kanit", "IBM Plex Sans Thai", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans Thai", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0F1412; --surface: #171F1B; --ink: #E6EEE9; --muted: #98A89F; --line: #2A3630; --field: #0F1412;
+    --accent: #84AAEE; --on-accent: #0B1526; --accent-soft: #1D2D4A;
+    --up: #5EC48E; --up-soft: #163223; --deload: #E3B94C; --deload-soft: #3A3012;
+    --hold: #F28F85; --hold-soft: #411F1C;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0F1412; --surface: #171F1B; --ink: #E6EEE9; --muted: #98A89F; --line: #2A3630; --field: #0F1412;
+  --accent: #84AAEE; --on-accent: #0B1526; --accent-soft: #1D2D4A;
+  --up: #5EC48E; --up-soft: #163223; --deload: #E3B94C; --deload-soft: #3A3012;
+  --hold: #F28F85; --hold-soft: #411F1C;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.5;
+  padding-block: 0 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wrap { max-width: 640px; margin: 0 auto; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* แถบบน */
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 14px 10px; border-bottom: 1px solid var(--line); }
+.brand { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.brand h1 { font-family: var(--font-display); font-weight: 600; font-size: 22px; letter-spacing: .01em; margin: 0; }
+.sync { font-size: 12px; color: var(--muted); text-align: right; }
+.stepper { display: flex; align-items: center; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.step-btn { width: 40px; height: 40px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); font-size: 20px; line-height: 1; display: grid; place-items: center; }
+.step-btn:disabled { opacity: .35; cursor: default; }
+.week-label { font-family: var(--font-display); font-weight: 600; font-size: 18px; min-width: 7.2em; text-align: center; }
+.badge { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 99px; background: var(--accent-soft); color: var(--accent); white-space: nowrap; }
+.badge.deload { background: var(--deload-soft); color: var(--deload); }
+.badge.up { background: var(--up-soft); color: var(--up); }
+.badge.hold { background: var(--hold-soft); color: var(--hold); }
+.progress-note { margin-left: auto; font-size: 13px; color: var(--muted); }
+
+/* แท็บมุมมอง */
+.views { display: flex; gap: 4px; margin-top: 10px; border-bottom: 1px solid var(--line); }
+.views button { flex: 1; background: none; border: 0; border-bottom: 3px solid transparent; padding: 8px 4px; font-weight: 500; color: var(--muted); min-height: 44px; }
+.views button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); font-weight: 600; }
+
+/* วัน */
+.days { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
+.day-btn { min-width: 0; text-align: left; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); display: flex; flex-direction: column; gap: 2px; min-height: 64px; }
+.day-btn .d { font-family: var(--font-display); font-weight: 600; font-size: 15px; display: flex; justify-content: space-between; align-items: center; }
+.day-btn .n { font-size: 12px; color: var(--muted); line-height: 1.3; overflow-wrap: anywhere; }
+.day-btn[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.day-btn.done .d::after { content: "✓"; color: var(--up); font-size: 15px; }
+
+/* การ์ดท่า */
+.list { display: flex; flex-direction: column; gap: 12px; margin-top: 14px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
+.ex-head { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+.ex-name { font-family: var(--font-display); font-weight: 600; font-size: 17px; line-height: 1.3; margin: 0; overflow-wrap: anywhere; }
+.part { font-size: 12px; color: var(--muted); }
+.plan { font-size: 13px; color: var(--muted); white-space: nowrap; text-align: right; }
+.target { margin-top: 10px; padding: 8px 10px; border-radius: 8px; background: var(--bg); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 14px; }
+.target b { font-family: var(--font-display); font-weight: 600; font-size: 16px; }
+.target .why { flex-basis: 100%; font-size: 12.5px; color: var(--muted); }
+.first-hint { margin-top: 8px; font-size: 12.5px; color: var(--muted); }
+.prev { margin-top: 8px; font-size: 12.5px; color: var(--muted); overflow-wrap: anywhere; }
+.sets { margin-top: 12px; display: grid; grid-template-columns: 54px auto 62px 34px; justify-content: start; gap: 4px 6px; align-items: center;
+  grid-template-areas: "hs hw hr hc" "cs cw cr cc"; }
+.a-hs { grid-area: hs; } .a-hw { grid-area: hw; } .a-hr { grid-area: hr; } .a-hc { grid-area: hc; }
+.a-cs { grid-area: cs; } .a-cw { grid-area: cw; } .a-cr { grid-area: cr; } .a-cc { grid-area: cc; }
+.sets .h, .warm .h { font-size: 13px; color: var(--muted); }
+.sets .h { min-width: 0; white-space: nowrap; }
+.sets select { width: 100%; min-width: 0; height: 42px; border-radius: 8px; border: 1px solid var(--line); background: var(--field); padding: 0 4px; font-size: 16px; font-variant-numeric: tabular-nums; text-align-last: center; }
+.sets select:disabled { opacity: .55; }
+.wcell { display: grid; grid-template-columns: 40px 40px 66px 40px 40px; gap: 4px; align-items: center; }
+.wcell input { width: 100%; min-width: 0; height: 42px; border-radius: 8px; border: 1px solid var(--line); background: var(--field); padding: 0 2px; font-family: var(--font-display); font-weight: 600; font-size: 20px; font-variant-numeric: tabular-nums; text-align: center; }
+.wcell input::placeholder { color: var(--muted); opacity: .6; }
+.stp { height: 42px; min-width: 0; padding: 0; border-radius: 8px; border: 1px solid var(--line); background: var(--field); font-size: 13px; line-height: 1; font-weight: 600; font-variant-numeric: tabular-nums; }
+.stp.neg { color: var(--muted); }
+.stp.pos { color: var(--accent); }
+.stp:active { background: var(--accent-soft); }
+.sets .chk { width: 34px; height: 34px; font-size: 15px; justify-self: center; }
+@media (max-width: 520px) {
+  .sets { grid-template-columns: 54px 96px 34px; justify-content: start;
+    grid-template-areas: "hs hr hc" "cs cr cc" "hw hw hw" "cw cw cw"; }
+  .a-hw { margin-top: 8px; }
+  .wcell { grid-template-columns: 42px 42px minmax(0, 88px) 42px 42px; justify-content: start; }
+}
+.warm { margin-top: 10px; display: flex; gap: 10px; align-items: center; }
+.warm-text { font-size: 14px; }
+.chk { width: 44px; height: 44px; border-radius: 8px; border: 1px solid var(--line); background: var(--field); display: grid; place-items: center; font-size: 18px; color: transparent; }
+.chk.sm { width: 36px; height: 36px; flex: none; font-size: 15px; }
+.chk[aria-pressed="true"] { background: var(--up); border-color: var(--up); color: var(--on-accent); }
+.row-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+.link { background: none; border: 0; padding: 6px 2px; color: var(--accent); font-size: 13px; font-weight: 500; min-height: 36px; }
+.btn { width: 100%; min-height: 48px; border-radius: 10px; border: 1px solid var(--accent); background: var(--accent); color: var(--on-accent); font-weight: 600; font-size: 16px; }
+.btn.ghost { background: transparent; color: var(--accent); }
+.footer-actions { margin-top: 16px; display: flex; flex-direction: column; gap: 10px; }
+.hint { font-size: 13px; color: var(--muted); margin-top: 10px; }
+
+/* สัปดาห์หน้า / ความก้าวหน้า */
+.group-title { font-family: var(--font-display); font-weight: 600; font-size: 15px; margin: 20px 0 6px; color: var(--muted); }
+.rows { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.rowi { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; padding: 10px 14px; align-items: center; }
+.rowi + .rowi { border-top: 1px solid var(--line); }
+.rowi .t { font-weight: 500; overflow-wrap: anywhere; }
+.rowi .s { font-size: 13px; color: var(--muted); }
+.rowi .r { text-align: right; font-variant-numeric: tabular-nums; }
+.rowi .r b { font-family: var(--font-display); font-weight: 600; }
+.spark { display: block; }
+.spark .ln { stroke: var(--accent); fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.spark .dot { fill: var(--accent); }
+.spark .base { stroke: var(--line); stroke-width: 1; }
+.empty { padding: 18px 14px; color: var(--muted); font-size: 14px; }
+.settings { margin-top: 26px; padding-top: 14px; border-top: 1px solid var(--line); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 14px; color: var(--muted); }
+.settings select { height: 40px; border-radius: 8px; border: 1px solid var(--line); background: var(--field); padding: 0 10px; }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 10px; font-size: 14px; z-index: 20; max-width: calc(100vw - 32px); }
+@media (max-width: 420px) {
+  .day-btn { padding: 8px; }
+  .week-label { min-width: 6.4em; font-size: 17px; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="brand"><h1>สมุดเวท</h1><div class="sync" id="sync" role="status" aria-live="polite"></div></div>
+  <div id="topdyn"></div>
+</div></header>
+<main class="wrap" id="app"></main>
+<div id="toast-root"></div>
+<script>
+/* ===== ข้อมูลแผน + ตรรกะคำนวณ (pure functions, ไม่แตะ DOM) ===== */
+var PROGRAM = [
+  { id: 1, name: 'อก + ขา', ex: [
+    { id: 'bench',     name: 'Barbell Bench Press',     part: 'อก',  sets: 4, lo: 5,  hi: 8,  inc: 1.25, side: 'bar', note: 'ใส่แผ่นข้างละ ไม่รวมบาร์' },
+    { id: 'incdb',     name: 'Incline Dumbbell Press',  part: 'อก',  sets: 3, lo: 8,  hi: 10, inc: 2,   note: 'ข้างละ', side: 'each' },
+    { id: 'cablefly',  name: 'Cable Fly',               part: 'อก',  sets: 3, lo: 12, hi: 15, inc: 2, note: 'ข้างละ', side: 'each' },
+    { id: 'squat',     name: 'Barbell Squat',           part: 'ขา',  sets: 4, lo: 5,  hi: 8,  inc: 1.25, side: 'bar', note: 'ใส่แผ่นข้างละ ไม่รวมบาร์' },
+    { id: 'legext',    name: 'Leg Extension',           part: 'ขา',  sets: 3, lo: 10, hi: 15, inc: 2.5 }
+  ]},
+  { id: 2, name: 'หลัง + ไหล่', ex: [
+    { id: 'rowwide',   name: 'Seated Cable Row (Wide Grip)',   part: 'หลัง', sets: 4, lo: 8,  hi: 10, inc: 2.5 },
+    { id: 'pulldown',  name: 'Lat Pulldown',                   part: 'หลัง', sets: 3, lo: 8,  hi: 12, inc: 2.5 },
+    { id: 'rownarrow', name: 'Seated Cable Row (Narrow Grip)', part: 'หลัง', sets: 3, lo: 10, hi: 12, inc: 2.5 },
+    { id: 'ohp',       name: 'Overhead Press',                 part: 'ไหล่', sets: 3, lo: 6,  hi: 10, inc: 1.25, side: 'bar', note: 'ใส่แผ่นข้างละ ไม่รวมบาร์' },
+    { id: 'lateral',   name: 'Lateral Raise',                  part: 'ไหล่', sets: 3, lo: 12, hi: 15, inc: 1,   note: 'ข้างละ', side: 'each' }
+  ]},
+  { id: 3, name: 'แขน + ขา', ex: [
+    { id: 'bbcurl',    name: 'Barbell Curl',            part: 'แขน', sets: 3, lo: 8,  hi: 10, inc: 1.25, side: 'bar', note: 'ใส่แผ่นข้างละ ไม่รวมบาร์' },
+    { id: 'incurl',    name: 'Incline Dumbbell Curl',   part: 'แขน', sets: 3, lo: 10, hi: 12, inc: 1,   note: 'ข้างละ', side: 'each' },
+    { id: 'pushdown',  name: 'Triceps Pushdown',        part: 'แขน', sets: 3, lo: 10, hi: 15, inc: 2.5 },
+    { id: 'lunge',     name: 'Lunge',                   part: 'ขา',  sets: 3, lo: 8,  hi: 12, inc: 2,   note: 'ข้างละ · ครั้งนับต่อขา', side: 'each' },
+    { id: 'legcurl',   name: 'Leg Curl',                part: 'ขา',  sets: 3, lo: 10, hi: 15, inc: 2.5, note: 'ข้างละ', side: 'each' }
+  ]},
+  { id: 4, name: 'อก + หลัง + แขน', ex: [
+    { id: 'incdb',     name: 'Incline Dumbbell Press',  part: 'อก',  sets: 3, lo: 8,  hi: 10, inc: 2,   note: 'ข้างละ', side: 'each' },
+    { id: 'cablefly',  name: 'Cable Fly',               part: 'อก',  sets: 3, lo: 12, hi: 15, inc: 2, note: 'ข้างละ', side: 'each' },
+    { id: 'pullup',    name: 'Pull-up',                 part: 'หลัง', sets: 3, lo: 6,  hi: 10, inc: 2.5, note: 'น้ำหนักถ่วงเพิ่ม · 0 = น้ำหนักตัว' },
+    { id: 'rownarrow', name: 'Seated Cable Row (Narrow Grip)', part: 'หลัง', sets: 3, lo: 10, hi: 12, inc: 2.5 },
+    { id: 'pushdown',  name: 'Triceps Pushdown',        part: 'แขน', sets: 3, lo: 10, hi: 15, inc: 2.5 },
+    { id: 'hammer',    name: 'Hammer Curl',             part: 'แขน', sets: 3, lo: 10, hi: 12, inc: 1,   note: 'ข้างละ', side: 'each' }
+  ]}
+];
+
+function slotKey(week, day, exId) { return week + ':' + day + ':' + exId; }
+
+function isDeload(week, every) {
+  return every > 0 && week % every === 0;
+}
+
+function plannedSets(ex, week, every, base) {
+  var b = base || ex.sets;
+  return isDeload(week, every) ? Math.max(1, Math.ceil(b / 2)) : b;
+}
+
+/* ผลที่บันทึกของท่า: น้ำหนักเดียว ครั้งเดียว ใช้กับทุกเซต (น้ำหนัก >= 0 และครั้ง > 0) */
+function validSets(rec) {
+  if (!rec) return [];
+  var w = parseFloat(rec.w), r = parseInt(rec.r, 10);
+  return (isFinite(w) && w >= 0 && isFinite(r) && r > 0) ? [{ w: w, r: r }] : [];
+}
+
+/* สัปดาห์ล่าสุดก่อน "week" ที่ไม่ใช่ deload และมีข้อมูลของท่านี้ */
+function baseWeek(logs, week, day, exId, every) {
+  for (var w = week - 1; w >= 1; w--) {
+    if (isDeload(w, every)) continue;
+    if (validSets(logs[slotKey(w, day, exId)]).length) return w;
+  }
+  return 0;
+}
+
+function roundW(x) { return Math.round(x * 4) / 4; }
+
+/* double progression: ครั้งเต็มเพดานทุกเซต -> เพิ่มน้ำหนัก, ไม่เต็ม -> เพิ่มครั้ง */
+function nextFrom(ex, sets) {
+  if (!sets.length) return null;
+  var w = sets[0].w, r = sets[0].r;
+  if (r >= ex.hi) return { w: roundW(w + ex.inc), r: ex.lo, kind: 'up', from: w };
+  if (r < ex.lo) return { w: w, r: ex.lo, kind: 'hold', from: w };
+  return { w: w, r: Math.min(ex.hi, r + 1), kind: 'reps', from: w };
+}
+
+/* เซตวอร์มอัพ: ราวครึ่งหนึ่งของน้ำหนักจริง ปัดตามขั้นของอุปกรณ์ */
+function warmupW(ex, w) {
+  var step = ex.side ? (ex.inc >= 2 ? 1 : 0.5) : (ex.inc >= 2.5 ? 2.5 : 1);
+  return Math.round(w / 2 / step) * step;
+}
+function warmupText(ex, w) {
+  if (!isFinite(w)) return 'ใส่น้ำหนักก่อน ระบบจะคำนวณวอร์มอัพให้ (ราวครึ่งหนึ่ง)';
+  if (w === 0) return ex.id === 'pullup' ? 'ดึงตัวเบาๆ 3–5 ครั้ง ใช้น้ำหนักตัว · 1 เซต' : 'ใส่น้ำหนักก่อน ระบบจะคำนวณวอร์มอัพให้ (ราวครึ่งหนึ่ง)';
+  var h = warmupW(ex, w);
+  if (h <= 0) return (ex.side === 'bar' ? 'บาร์เปล่า' : 'น้ำหนักเบาสุด') + ' × 10 ครั้ง · 1 เซต';
+  return kg(ex, h) + ' × 10 ครั้ง · 1 เซต';
+}
+
+/* เป้าหมายของท่าในสัปดาห์ week; null = ยังไม่มีข้อมูลก่อนหน้า */
+function targetFor(logs, week, day, ex, every) {
+  var bw = baseWeek(logs, week, day, ex.id, every);
+  if (!bw) return null;
+  var prev = validSets(logs[slotKey(bw, day, ex.id)]);
+  var t = nextFrom(ex, prev);
+  if (!t) return null;
+  t.baseWeek = bw;
+  if (isDeload(week, every)) {
+    var top = t.from;
+    return { w: top, r: ex.lo, kind: 'deload', from: top, baseWeek: bw };
+  }
+  return t;
+}
+
+function fmtW(w) {
+  if (w === 0) return '0';
+  return (Math.round(w * 100) / 100).toString();
+}
+
+function summarizeSets(sets, ex) {
+  return sets.map(function (s) { return kg(ex, s.w) + ' × ' + s.r; }).join(' · ');
+}
+
+/* น้ำหนักพร้อมหน่วย: ท่าที่ใส่ทีละข้างจะต่อท้ายว่า ข้างละ */
+function kg(ex, w) { return fmtW(w) + ' กก.' + (ex && ex.side ? ' ข้างละ' : ''); }
+
+/* ค่าสรุปรายสัปดาห์ของท่า: น้ำหนัก ครั้ง และปริมาณรวม (น้ำหนัก × ครั้ง × จำนวนเซต) */
+function weekStat(rec, nSets) {
+  var v = validSets(rec);
+  if (!v.length) return null;
+  var n = (rec && rec.n > 0) ? rec.n : (nSets || 1);
+  return { topW: v[0].w, topR: v[0].r, volume: v[0].w * v[0].r * n, sets: n };
+}
+
+if (typeof module !== 'undefined') {
+  module.exports = { PROGRAM: PROGRAM, slotKey: slotKey, isDeload: isDeload, plannedSets: plannedSets,
+    validSets: validSets, baseWeek: baseWeek, nextFrom: nextFrom, targetFor: targetFor, weekStat: weekStat,
+    summarizeSets: summarizeSets, kg: kg, warmupW: warmupW, warmupText: warmupText };
+}
+/* ===== สถานะ + การเก็บข้อมูล ===== */
+var KEY = 'samutwet:v1';
+var state = { v: 1, week: 1, deloadEvery: 7, logs: {}, done: {}, setsOv: {}, t: 0 };
+var ui = { view: 'today', day: 1 };
+var store = { doc: null, saving: false, dirty: false, timer: null, mode: 'local' };
+
+function clone(o) { return JSON.parse(JSON.stringify(o)); }
+function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function $(id) { return document.getElementById(id); }
+
+function localLoad() { try { return JSON.parse(localStorage.getItem(KEY)); } catch (e) { return null; } }
+function localSave() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+
+function normalize(s) {
+  var d = { v: 1, week: 1, deloadEvery: 7, logs: {}, done: {}, setsOv: {}, t: 0 };
+  if (!s || typeof s !== 'object') return d;
+  d.week = Math.min(52, Math.max(1, parseInt(s.week, 10) || 1));
+  var de = parseInt(s.deloadEvery, 10);
+  d.deloadEvery = (de === 0 || (de >= 4 && de <= 12)) ? de : 7;
+  d.logs = (s.logs && typeof s.logs === 'object') ? s.logs : {};
+  Object.keys(d.logs).forEach(function (k) { d.logs[k] = migrateRec(d.logs[k]); });
+  d.done = (s.done && typeof s.done === 'object') ? s.done : {};
+  if (s.setsOv && typeof s.setsOv === 'object') {
+    Object.keys(s.setsOv).forEach(function (k) { var n = parseInt(s.setsOv[k], 10); if (n >= 1 && n <= 8) d.setsOv[k] = n; });
+  }
+  d.t = Number(s.t) || 0;
+  return d;
+}
+
+function setSync(mode) {
+  var el = $('sync'); if (!el) return;
+  var txt = { cloud: 'บันทึกในบัญชีของคุณแล้ว', saving: 'กำลังบันทึก…', local: 'บันทึกในเครื่องนี้เท่านั้น',
+              error: 'ส่งขึ้นบัญชีไม่ได้ เก็บในเครื่องไว้ก่อน' };
+  el.textContent = txt[mode] || txt.local;
+}
+
+function queueSave() {
+  state.t = Date.now();
+  localSave();
+  if (!store.doc) { setSync('local'); return; }
+  store.dirty = true;
+  clearTimeout(store.timer);
+  store.timer = setTimeout(flush, 700);
+}
+
+function flush() {
+  if (!store.doc || !store.dirty) return Promise.resolve();
+  if (store.saving) return Promise.resolve();
+  store.saving = true; store.dirty = false; setSync('saving');
+  return store.doc.set(clone(state)).then(function () { setSync('cloud'); }, function () { setSync('error'); })
+    .then(function () {
+      store.saving = false;
+      if (store.dirty) { clearTimeout(store.timer); store.timer = setTimeout(flush, 700); }
+    });
+}
+
+function initStore() {
+  var c = window.claude;
+  if (!c || !c.use) { setSync('local'); return; }
+  Promise.all([c.use('db'), c.use('user')]).then(function (r) {
+    var db = r[0], user = r[1];
+    if (!db || !user) { setSync('local'); return null; }
+    return user.id().then(function (uid) {
+      if (!uid) { setSync('local'); return null; }
+      store.doc = db.doc('data/users/' + uid + '/state');
+      return store.doc.get().then(function (snap) {
+        var remote = snap.exists ? normalize(clone(snap.data())) : null;
+        if (remote && remote.t > state.t) {
+          state = remote; localSave();
+          ui.day = firstOpenDay(); render();
+          setSync('cloud');
+        } else if (state.t > 0 || Object.keys(state.logs).length) {
+          store.dirty = true; return flush();
+        } else {
+          setSync('cloud');
+        }
+      });
+    });
+  }).catch(function () { store.doc = null; setSync('local'); });
+}
+
+/* ===== ตัวช่วยข้อมูล ===== */
+function doneKey(week, day) { return week + ':' + day; }
+function doneCount(week) { var n = 0; for (var d = 1; d <= 4; d++) if (state.done[doneKey(week, d)]) n++; return n; }
+function firstOpenDay() { for (var d = 1; d <= 4; d++) if (!state.done[doneKey(state.week, d)]) return d; return 1; }
+function todayISO() { var t = new Date(); return t.getFullYear() + '-' + ('0' + (t.getMonth() + 1)).slice(-2) + '-' + ('0' + t.getDate()).slice(-2); }
+function fmtDate(iso) {
+  var p = String(iso).split('-'); if (p.length !== 3) return '';
+  return new Date(+p[0], +p[1] - 1, +p[2]).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' });
+}
+/* จำนวนเซตปกติของท่าในวันนั้น: ค่าที่ผู้ใช้ปรับ ถ้าไม่ปรับใช้ค่าที่แนะนำ */
+function setsOf(day, ex) { return state.setsOv[day + ':' + ex.id] || ex.sets; }
+function exOf(day, exId) { var d = PROGRAM[day - 1]; for (var i = 0; i < d.ex.length; i++) if (d.ex[i].id === exId) return d.ex[i]; return null; }
+function domId(prefix, key, i) { return prefix + '_' + key.replace(/:/g, '_') + (i === undefined ? '' : '_' + i); }
+
+/* บันทึกต่อท่า: w = น้ำหนัก, r = ครั้งต่อเซต, k = ทำครบทุกเซต, u = วอร์มอัพแล้ว */
+function ensureRec(key) {
+  if (!state.logs[key]) state.logs[key] = { w: '', r: '', k: 0, u: 0 };
+  return state.logs[key];
+}
+function recBlank(rec) { return rec.w === '' && rec.r === '' && !rec.k && !rec.u; }
+
+/* ข้อมูลรุ่นแรกเก็บเป็นรายเซต: ย่อเหลือน้ำหนักสูงสุดกับครั้งต่ำสุดที่น้ำหนักนั้น */
+function migrateRec(rec) {
+  if (!rec || typeof rec !== 'object') return { w: '', r: '', k: 0, u: 0 };
+  if (!rec.sets) var m = { w: String(rec.w == null ? '' : rec.w), r: String(rec.r == null ? '' : rec.r), k: rec.k ? 1 : 0, u: rec.u ? 1 : 0 };
+    if (rec.n > 0) m.n = +rec.n;
+    return m;
+  var best = null;
+  rec.sets.forEach(function (s) {
+    var w = parseFloat(s.w), r = parseInt(s.r, 10);
+    if (!isFinite(w) || !isFinite(r) || r <= 0) return;
+    if (!best || w > best.w) best = { w: w, r: r };
+    else if (w === best.w && r < best.r) best.r = r;
+  });
+  return best ? { w: fmtW(best.w), r: String(best.r), k: 0, u: 0 } : { w: '', r: '', k: 0, u: 0 };
+}
+
+/* น้ำหนักที่ใช้คิดวอร์มอัพ: ที่กรอกไว้ ถ้ายังว่างใช้เป้าหมาย */
+function basisW(rec, t) {
+  var w = parseFloat(rec && rec.w);
+  if (isFinite(w)) return w;
+  return t ? t.w : NaN;
+}
+
+/* ===== การ์ดท่า ===== */
+var KIND = {
+  up:     { label: 'เพิ่มน้ำหนัก', cls: 'up' },
+  reps:   { label: 'เพิ่มครั้ง', cls: '' },
+  hold:   { label: 'คงน้ำหนัก', cls: 'hold' },
+  deload: { label: 'Deload', cls: 'deload' }
+};
+
+function whyText(ex, t, n) {
+  if (t.kind === 'up') return 'ครบ ' + ex.hi + ' ครั้งแล้ว เพิ่มจาก ' + kg(ex, t.from) + ' เป็น ' + kg(ex, t.w) + ' แล้วเริ่มนับที่ ' + ex.lo + ' ครั้ง';
+  if (t.kind === 'reps') return 'ใช้ ' + kg(ex, t.w) + ' เดิม พยายามให้ได้ ' + t.r + ' ครั้งทุกเซต (เพดาน ' + ex.hi + ')';
+  if (t.kind === 'hold') return 'ครั้งยังไม่ถึง ' + ex.lo + ' ใช้ ' + kg(ex, t.w) + ' เดิมจนทำได้ ' + ex.lo + ' ครั้งทุกเซต';
+  return 'สัปดาห์ Deload ลดเหลือ ' + n + ' เซต ใช้น้ำหนักเดิม ทำเบาๆ เหลือแรงอย่างน้อย 3 ครั้ง';
+}
+
+function stepBtn(d) {
+  var neg = d < 0;
+  return '<button type="button" class="stp ' + (neg ? 'neg' : 'pos') + '" data-act="wadj" data-d="' + d + '" aria-label="' + (neg ? 'ลด ' : 'เพิ่ม ') + Math.abs(d) + ' กก.">' + (neg ? '−' : '+') + Math.abs(d) + '</button>';
+}
+
+function cardHTML(day, ex) {
+  var wk = state.week, every = state.deloadEvery;
+  var key = slotKey(wk, day, ex.id);
+  var base = setsOf(day, ex), n = plannedSets(ex, wk, every, base), dl = isDeload(wk, every);
+  var rec = state.logs[key] || { w: '', r: '', k: 0, u: 0 };
+  var t = targetFor(state.logs, wk, day, ex, every);
+  var h = '<section class="card" data-key="' + esc(key) + '" data-day="' + day + '" data-ex="' + ex.id + '">';
+  h += '<div class="ex-head"><div><h3 class="ex-name">' + esc(ex.name) + '</h3><div class="part">' + esc(ex.part) + (ex.note ? ' · ' + esc(ex.note) : '') + '</div></div>';
+  h += '<div class="plan num">' + n + ' เซต × ' + (dl ? ex.lo + '+' : ex.lo + '–' + ex.hi) + (!dl && base !== ex.sets ? '<br>แนะนำ ' + ex.sets + ' เซต' : '') + '</div></div>';
+  if (t) {
+    var k = KIND[t.kind];
+    h += '<div class="target"><span>เป้าหมาย</span><b class="num">' + kg(ex, t.w) + ' × ' + (t.kind === 'deload' ? ex.lo + '+' : t.r) + '</b>';
+    h += '<span class="badge ' + k.cls + '">' + k.label + '</span><div class="why">' + esc(whyText(ex, t, n)) + '</div></div>';
+    h += '<div class="prev num">สัปดาห์ที่ ' + t.baseWeek + ': ' + esc(summarizeSets(validSets(state.logs[slotKey(t.baseWeek, day, ex.id)]), ex)) + '</div>';
+  } else {
+    h += '<div class="first-hint">เลือกน้ำหนักที่ทำได้ ' + ex.lo + '–' + ex.hi + ' ครั้ง เหลือแรง 1–2 ครั้ง</div>';
+  }
+  h += '<div class="warm"><button type="button" class="chk sm" id="' + domId('u', key) + '" data-act="warm" aria-pressed="' + (rec.u ? 'true' : 'false') + '" aria-label="วอร์มอัพ ' + esc(ex.name) + ' แล้ว">✓</button>';
+  h += '<div><div class="h">เซตวอร์มอัพ</div><div class="warm-text num" id="' + domId('warmtxt', key) + '">' + esc(warmupText(ex, basisW(rec, t))) + '</div></div></div>';
+  var maxR = Math.max(30, parseInt(rec.r, 10) || 0), hintR = t ? (t.kind === 'deload' ? ex.lo : t.r) : '';
+  var maxS = Math.max(8, base);
+  h += '<div class="sets">';
+  h += '<label class="h a-hs" for="' + domId('s', key) + '">เซต</label>';
+  h += '<label class="h a-hw" for="' + domId('w', key) + '">' + (ex.side ? 'น้ำหนักข้างละ (กก.)' : 'น้ำหนัก (กก.)') + '</label>';
+  h += '<label class="h a-hr" for="' + domId('r', key) + '">ครั้ง</label><span class="h a-hc">ครบ</span>';
+  h += '<select class="a-cs" id="' + domId('s', key) + '" data-f="s" aria-label="' + esc(ex.name) + ' จำนวนเซต"' + (dl ? ' disabled title="สัปดาห์ Deload ลดเหลือครึ่งหนึ่งอัตโนมัติ"' : '') + '>';
+  for (var si = 1; si <= maxS; si++) h += '<option value="' + si + '"' + (si === n ? ' selected' : '') + '>' + si + '</option>';
+  h += '</select>';
+  h += '<div class="wcell a-cw">' + stepBtn(-2.5) + stepBtn(-1.25);
+  h += '<input id="' + domId('w', key) + '" type="text" inputmode="decimal" autocomplete="off" aria-label="' + esc(ex.name) + (ex.side ? ' น้ำหนักข้างละ กก.' : ' น้ำหนัก กก.') + '" data-f="w" value="' + esc(rec.w) + '" placeholder="' + (t ? esc(fmtW(t.w)) : '0') + '">';
+  h += stepBtn(1.25) + stepBtn(2.5) + '</div>';
+  h += '<select class="a-cr" id="' + domId('r', key) + '" data-f="r" aria-label="' + esc(ex.name) + ' ครั้งต่อเซต"><option value="">' + (hintR !== '' ? 'เป้า ' + hintR : '—') + '</option>';
+  for (var ri = 1; ri <= maxR; ri++) h += '<option value="' + ri + '"' + (String(ri) === String(rec.r) ? ' selected' : '') + '>' + ri + '</option>';
+  h += '</select>';
+  h += '<button type="button" class="chk a-cc" id="' + domId('c', key) + '" data-act="chk" aria-pressed="' + (rec.k ? 'true' : 'false') + '" aria-label="ทำครบ ' + n + ' เซตแล้ว">✓</button></div></section>';
+  return h;
+}
+/* ===== มุมมอง ===== */
+function renderTop() {
+  var wk = state.week, dl = isDeload(wk, state.deloadEvery);
+  var views = [['today', 'วันนี้'], ['next', 'สัปดาห์หน้า'], ['progress', 'ความก้าวหน้า']];
+  var h = '<div class="stepper">';
+  h += '<button type="button" class="step-btn" id="wprev" data-act="wprev" aria-label="สัปดาห์ก่อนหน้า"' + (wk <= 1 ? ' disabled' : '') + '>‹</button>';
+  h += '<div class="week-label num">สัปดาห์ที่ ' + wk + '</div>';
+  h += '<button type="button" class="step-btn" id="wnext" data-act="wnext" aria-label="สัปดาห์ถัดไป"' + (wk >= 52 ? ' disabled' : '') + '>›</button>';
+  if (dl) h += '<span class="badge deload">Deload</span>';
+  h += '<span class="progress-note num">เล่นแล้ว ' + doneCount(wk) + '/4 วัน</span></div>';
+  h += '<div class="views" role="tablist" aria-label="มุมมอง">';
+  views.forEach(function (v) {
+    h += '<button type="button" role="tab" id="tab_' + v[0] + '" data-act="view" data-view="' + v[0] + '" aria-selected="' + (ui.view === v[0] ? 'true' : 'false') + '">' + v[1] + '</button>';
+  });
+  h += '</div>';
+  $('topdyn').innerHTML = h;
+}
+
+function settingsHTML() {
+  var opts = [0, 6, 7, 8];
+  if (opts.indexOf(state.deloadEvery) < 0) { opts.push(state.deloadEvery); opts.sort(function (a, b) { return a - b; }); }
+  var h = '<div class="settings"><label for="deload-sel">สัปดาห์ Deload (ลดเซตลงครึ่งหนึ่ง) ทุก</label><select id="deload-sel">';
+  opts.forEach(function (o) {
+    h += '<option value="' + o + '"' + (o === state.deloadEvery ? ' selected' : '') + '>' + (o === 0 ? 'ไม่ใช้' : o + ' สัปดาห์') + '</option>';
+  });
+  return h + '</select></div>';
+}
+
+function renderToday() {
+  var wk = state.week, d = ui.day, day = PROGRAM[d - 1];
+  var h = '<div class="days" role="group" aria-label="เลือกวันเล่น">';
+  PROGRAM.forEach(function (p) {
+    var dn = !!state.done[doneKey(wk, p.id)];
+    h += '<button type="button" class="day-btn' + (dn ? ' done' : '') + '" id="day_' + p.id + '" data-act="day" data-day="' + p.id + '" aria-pressed="' + (p.id === d ? 'true' : 'false') + '">';
+    h += '<span class="d">วัน ' + p.id + '</span><span class="n">' + esc(p.name) + '</span></button>';
+  });
+  h += '</div>';
+  if (isDeload(wk, state.deloadEvery)) {
+    h += '<p class="hint"><span class="badge deload">Deload</span> สัปดาห์นี้ลดเหลือครึ่งหนึ่งของจำนวนเซต ใช้น้ำหนักเดิมและเหลือแรงเยอะ ให้ร่างกายฟื้นตัว</p>';
+  }
+  h += '<div class="list">';
+  day.ex.forEach(function (ex) { h += cardHTML(d, ex); });
+  h += '</div><div class="footer-actions">';
+  var dk = doneKey(wk, d);
+  if (state.done[dk]) {
+    h += '<p class="hint" style="margin:0">เล่นวันที่ ' + d + ' แล้วเมื่อ ' + esc(fmtDate(state.done[dk])) + '</p>';
+    h += '<button type="button" class="btn ghost" id="undo" data-act="undo">ยกเลิกสถานะ “เล่นแล้ว”</button>';
+  } else {
+    h += '<button type="button" class="btn" id="done" data-act="done">จบวันที่ ' + d + '</button>';
+  }
+  if (doneCount(wk) === 4 && wk < 52) {
+    h += '<button type="button" class="btn" id="advance" data-act="advance">ครบ 4 วันแล้ว ไปสัปดาห์ที่ ' + (wk + 1) + '</button>';
+  }
+  h += '</div><p class="hint">กรอกน้ำหนักและจำนวนครั้งที่ทำได้ครบทุกเซต (ถ้าแต่ละเซตไม่เท่ากัน ใช้ค่าต่ำสุด) แตะ ✓ ตอนท้ายช่อง ระบบจะใส่ค่าตามเป้าหมายให้ถ้ายังว่าง แก้ตัวเลขได้ถ้าทำได้ต่างจากเป้า</p>';
+  return h;
+}
+
+function renderNext() {
+  var nw = state.week + 1, every = state.deloadEvery;
+  if (nw > 52) return '<p class="empty">นี่คือสัปดาห์สุดท้ายของโปรแกรม 52 สัปดาห์</p>';
+  var h = '<p class="hint" style="margin-top:14px">เป้าหมายของสัปดาห์ที่ ' + nw + ' คำนวณจากผลที่บันทึกไว้ ' + (isDeload(nw, every) ? '<span class="badge deload">Deload</span> ' : '') + 'ยิ่งบันทึกครบ เป้าหมายยิ่งแม่น</p>';
+  PROGRAM.forEach(function (day) {
+    h += '<h2 class="group-title">วัน ' + day.id + ' · ' + esc(day.name) + '</h2><div class="rows">';
+    day.ex.forEach(function (ex) {
+      var t = targetFor(state.logs, nw, day.id, ex, every);
+      var cur = validSets(state.logs[slotKey(state.week, day.id, ex.id)]);
+      var sub;
+      if (cur.length) sub = 'สัปดาห์นี้ ' + summarizeSets(cur, ex);
+      else if (t) sub = 'ยังไม่ได้บันทึกสัปดาห์นี้ ใช้ผลสัปดาห์ที่ ' + t.baseWeek;
+      else sub = 'ยังไม่มีข้อมูล';
+      h += '<div class="rowi"><div><div class="t">' + esc(ex.name) + '</div><div class="s num">' + esc(sub) + '</div></div><div class="r">';
+      if (t) {
+        var k = KIND[t.kind];
+        h += '<b>' + kg(ex, t.w) + ' × ' + (t.kind === 'deload' ? ex.lo + '+' : t.r) + '</b><br><span class="badge ' + k.cls + '">' + (t.kind === 'deload' ? 'Deload · ' + plannedSets(ex, nw, every, setsOf(day.id, ex)) + ' เซต' : k.label) + '</span>';
+      } else {
+        h += '<span class="s">รอข้อมูล</span>';
+      }
+      h += '</div></div>';
+    });
+    h += '</div>';
+  });
+  return h;
+}
+
+function spark(points, label) {
+  var W = 96, H = 32, P = 4, i;
+  var minX = points[0].x, maxX = points[0].x, minY = points[0].y, maxY = points[0].y;
+  for (i = 1; i < points.length; i++) {
+    minX = Math.min(minX, points[i].x); maxX = Math.max(maxX, points[i].x);
+    minY = Math.min(minY, points[i].y); maxY = Math.max(maxY, points[i].y);
+  }
+  function sx(x) { return maxX === minX ? W / 2 : P + (x - minX) / (maxX - minX) * (W - 2 * P); }
+  function sy(y) { return maxY === minY ? H / 2 : H - P - (y - minY) / (maxY - minY) * (H - 2 * P); }
+  var d = '';
+  for (i = 0; i < points.length; i++) d += (i ? 'L' : 'M') + sx(points[i].x).toFixed(1) + ' ' + sy(points[i].y).toFixed(1);
+  var last = points[points.length - 1];
+  return '<svg class="spark" width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="' + esc(label) + '">' +
+    '<line class="base" x1="0" y1="' + (H - 1) + '" x2="' + W + '" y2="' + (H - 1) + '"/>' +
+    '<path class="ln" d="' + d + '"/><circle class="dot" cx="' + sx(last.x).toFixed(1) + '" cy="' + sy(last.y).toFixed(1) + '" r="3"/></svg>';
+}
+
+function weekVolume(w) {
+  var v = 0;
+  PROGRAM.forEach(function (day) {
+    day.ex.forEach(function (ex) { var s = weekStat(state.logs[slotKey(w, day.id, ex.id)], plannedSets(ex, w, state.deloadEvery, setsOf(day.id, ex))); if (s) v += s.volume; });
+  });
+  return v;
+}
+
+function renderProgress() {
+  var maxWeek = 0, any = false;
+  Object.keys(state.logs).forEach(function (k) { var w = parseInt(k.split(':')[0], 10); if (w > maxWeek) maxWeek = w; });
+  var doneDays = Object.keys(state.done).length;
+  var h = '<p class="hint" style="margin-top:14px">เล่นไปแล้ว ' + doneDays + ' วัน · ปริมาณรวมสัปดาห์ที่ ' + state.week + ' = ' + Math.round(weekVolume(state.week)).toLocaleString('en-US') + ' กก.' +
+    (state.week > 1 ? ' (สัปดาห์ก่อน ' + Math.round(weekVolume(state.week - 1)).toLocaleString('en-US') + ' กก.)' : '') + '</p>';
+  PROGRAM.forEach(function (day) {
+    var rows = '';
+    day.ex.forEach(function (ex) {
+      var series = [];
+      for (var w = 1; w <= maxWeek; w++) {
+        var st = weekStat(state.logs[slotKey(w, day.id, ex.id)], plannedSets(ex, w, state.deloadEvery, setsOf(day.id, ex)));
+        if (st) series.push({ w: w, st: st });
+      }
+      if (!series.length) return;
+      any = true;
+      var useW = series.some(function (s) { return s.st.topW > 0; });
+      var pts = series.map(function (s) { return { x: s.w, y: useW ? s.st.topW : s.st.topR }; });
+      var first = series[0], lastS = series[series.length - 1];
+      var delta = useW ? (lastS.st.topW - first.st.topW) : (lastS.st.topR - first.st.topR);
+      var unit = useW ? 'กก.' + (ex.side ? ' ข้างละ' : '') : 'ครั้ง';
+      var sub = series.length > 1 ? (delta > 0 ? 'เพิ่มขึ้น ' + fmtW(delta) + ' ' + unit + ' ตั้งแต่สัปดาห์ที่ ' + first.w : (delta === 0 ? 'เท่าเดิมตั้งแต่สัปดาห์ที่ ' + first.w : 'ลดลง ' + fmtW(-delta) + ' ' + unit + ' ตั้งแต่สัปดาห์ที่ ' + first.w)) : 'บันทึกครั้งแรก สัปดาห์ที่ ' + first.w;
+      rows += '<div class="rowi"><div><div class="t">' + esc(ex.name) + '</div><div class="s num">' + esc(sub) + '</div></div><div class="r">' +
+        (series.length > 1 ? spark(pts, ex.name + ' ท็อปเซตรายสัปดาห์') : '') +
+        '<div><b>' + kg(ex, lastS.st.topW) + ' × ' + lastS.st.topR + '</b></div></div></div>';
+    });
+    if (rows) h += '<h2 class="group-title">วัน ' + day.id + ' · ' + esc(day.name) + '</h2><div class="rows">' + rows + '</div>';
+  });
+  if (!any) h += '<div class="rows" style="margin-top:14px"><p class="empty">ยังไม่มีข้อมูล เริ่มบันทึกน้ำหนักและจำนวนครั้งในแท็บ “วันนี้” กราฟของแต่ละท่าจะขึ้นเมื่อมีข้อมูลตั้งแต่ 2 สัปดาห์</p></div>';
+  else h += '<p class="hint">ตัวเลขใหญ่คือท็อปเซตล่าสุด (น้ำหนัก × ครั้ง) เส้นกราฟคือน้ำหนักท็อปเซตรายสัปดาห์ ท่าที่ใช้น้ำหนักตัวล้วนจะแสดงจำนวนครั้งแทน</p>';
+  return h;
+}
+
+function render() {
+  renderTop();
+  var v = ui.view;
+  $('app').innerHTML = (v === 'today' ? renderToday() : v === 'next' ? renderNext() : renderProgress()) + settingsHTML();
+}
+
+function toast(msg) {
+  var root = $('toast-root'); root.innerHTML = '';
+  var el = document.createElement('div'); el.className = 'toast'; el.setAttribute('role', 'status'); el.textContent = msg;
+  root.appendChild(el);
+  setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 2600);
+}
+
+/* ===== เหตุการณ์ ===== */
+function replaceCard(card, focusId) {
+  var day = +card.dataset.day, ex = exOf(day, card.dataset.ex);
+  var tmp = document.createElement('div'); tmp.innerHTML = cardHTML(day, ex);
+  var fresh = tmp.firstChild; card.parentNode.replaceChild(fresh, card);
+  if (focusId) { var f = $(focusId); if (f) f.focus(); }
+}
+
+function cardCtx(el) {
+  var card = el.closest('.card'); if (!card) return null;
+  var day = +card.dataset.day, ex = exOf(day, card.dataset.ex), key = card.dataset.key;
+  return { card: card, day: day, ex: ex, key: key, n: plannedSets(ex, state.week, state.deloadEvery, setsOf(day, ex)) };
+}
+
+var ACTIONS = {
+  view: function (b) { ui.view = b.dataset.view; render(); },
+  day: function (b) { ui.day = +b.dataset.day; render(); },
+  wprev: function () { if (state.week > 1) { state.week--; ui.day = firstOpenDay(); queueSave(); render(); } },
+  wnext: function () { if (state.week < 52) { state.week++; ui.day = firstOpenDay(); queueSave(); render(); } },
+  chk: function (b) {
+    var c = cardCtx(b); if (!c) return;
+    var rec = ensureRec(c.key); rec.n = c.n;
+    rec.k = rec.k ? 0 : 1;
+    if (rec.k) {
+      var t = targetFor(state.logs, state.week, c.day, c.ex, state.deloadEvery);
+      if (t) {
+        if (rec.w === '') rec.w = fmtW(t.w);
+        if (rec.r === '') rec.r = String(t.kind === 'deload' ? c.ex.lo : t.r);
+      }
+    }
+    if (recBlank(rec)) delete state.logs[c.key];
+    queueSave(); replaceCard(c.card, b.id);
+  },
+  wadj: function (b) {
+    var c = cardCtx(b); if (!c) return;
+    var rec = ensureRec(c.key); rec.n = c.n;
+    var cur = parseFloat(rec.w);
+    if (!isFinite(cur)) { var t0 = targetFor(state.logs, state.week, c.day, c.ex, state.deloadEvery); cur = t0 ? t0.w : 0; }
+    var nw = Math.max(0, roundW(cur + parseFloat(b.dataset.d)));
+    rec.w = fmtW(nw);
+    var inp = $(domId('w', c.key)); if (inp) inp.value = rec.w;
+    var wt = $(domId('warmtxt', c.key)); if (wt) wt.textContent = warmupText(c.ex, nw);
+    queueSave();
+  },
+  warm: function (b) {
+    var c = cardCtx(b); if (!c) return;
+    var rec = ensureRec(c.key); rec.n = c.n;
+    rec.u = rec.u ? 0 : 1;
+    if (recBlank(rec)) delete state.logs[c.key];
+    queueSave(); replaceCard(c.card, b.id);
+  },
+  done: function () {
+    state.done[doneKey(state.week, ui.day)] = todayISO();
+    queueSave();
+    if (doneCount(state.week) === 4) toast('ครบ 4 วันของสัปดาห์นี้แล้ว'); else { ui.day = firstOpenDay(); toast('บันทึกวันนี้แล้ว'); }
+    render();
+  },
+  undo: function () { delete state.done[doneKey(state.week, ui.day)]; queueSave(); render(); },
+  advance: function () { if (state.week < 52) { state.week++; ui.day = firstOpenDay(); queueSave(); render(); window.scrollTo(0, 0); } }
+};
+
+document.addEventListener('click', function (e) {
+  var b = e.target.closest('[data-act]');
+  if (b && ACTIONS[b.dataset.act]) ACTIONS[b.dataset.act](b, e);
+});
+
+document.addEventListener('input', function (e) {
+  var el = e.target;
+  if (!el.dataset || !el.dataset.f || el.tagName !== 'INPUT') return;
+  var c = cardCtx(el); if (!c) return;
+  var f = el.dataset.f, v = el.value;
+  if (f === 'w') {
+    v = v.replace(',', '.').replace(/[^0-9.]/g, '');
+    var p = v.indexOf('.'); if (p >= 0) v = v.slice(0, p + 1) + v.slice(p + 1).replace(/\./g, '');
+    if (v.length > 6) v = v.slice(0, 6);
+  } else {
+    v = v.replace(/[^0-9]/g, '').slice(0, 3);
+  }
+  if (v !== el.value) el.value = v;
+  var rec = ensureRec(c.key); rec.n = c.n;
+  rec[f] = v;
+  if (f === 'w') {
+    var t = targetFor(state.logs, state.week, c.day, c.ex, state.deloadEvery);
+    var wt = $(domId('warmtxt', c.key));
+    if (wt) wt.textContent = warmupText(c.ex, basisW(rec, t));
+  }
+  if (recBlank(rec)) delete state.logs[c.key];
+  queueSave();
+});
+
+document.addEventListener('change', function (e) {
+  if (e.target.dataset && e.target.dataset.f === 's') {
+    var c = cardCtx(e.target); if (!c) return;
+    var n = parseInt(e.target.value, 10), k = c.day + ':' + c.ex.id;
+    if (n === c.ex.sets) delete state.setsOv[k]; else if (n >= 1 && n <= 8) state.setsOv[k] = n;
+    var rec = state.logs[c.key]; if (rec) rec.n = setsOf(c.day, c.ex);
+    queueSave(); replaceCard(c.card, domId('s', c.key));
+    return;
+  }
+  if (e.target.dataset && e.target.dataset.f === 'r') {
+    var c2 = cardCtx(e.target); if (!c2) return;
+    var rec2 = ensureRec(c2.key); rec2.n = c2.n; rec2.r = e.target.value;
+    if (recBlank(rec2)) delete state.logs[c2.key];
+    queueSave();
+    return;
+  }
+  if (e.target.id === 'deload-sel') {
+    state.deloadEvery = parseInt(e.target.value, 10) || 0;
+    queueSave(); render();
+  }
+});
+
+/* ===== เริ่มทำงาน ===== */
+state = normalize(localLoad());
+ui.day = firstOpenDay();
+render();
+setSync('local');
+initStore();
+/* ===== ส่วนเฉพาะแอปติดตั้ง (PWA): สำรอง/กู้คืนข้อมูล และใช้งานออฟไลน์ ===== */
+var pendingImport = null;
+var importError = '';
+
+var baseSettingsHTML = settingsHTML;
+settingsHTML = function () { return baseSettingsHTML() + backupHTML(); };
+
+function backupHTML() {
+  var h = '<div class="backup"><h2 class="group-title" style="margin:22px 0 6px">สำรองข้อมูล</h2>';
+  h += '<p class="hint" style="margin:0 0 10px">ข้อมูลเก็บอยู่ในเครื่องนี้เท่านั้น ควรส่งออกไฟล์เก็บไว้เป็นระยะ และก่อนเปลี่ยนเครื่องหรือล้างข้อมูลเบราว์เซอร์</p>';
+  if (pendingImport) {
+    var weeks = 0;
+    Object.keys(pendingImport.logs).forEach(function (k) { var w = parseInt(k.split(':')[0], 10); if (w > weeks) weeks = w; });
+    h += '<p class="hint" style="margin:0 0 10px">พบข้อมูลในไฟล์: ' + Object.keys(pendingImport.logs).length + ' รายการท่า ถึงสัปดาห์ที่ ' + weeks + ' การนำเข้าจะแทนที่ข้อมูลในเครื่องนี้ทั้งหมด</p>';
+    h += '<div class="footer-actions" style="margin-top:0"><button type="button" class="btn" id="apply-import" data-act="applyimport">แทนที่ด้วยข้อมูลในไฟล์</button>';
+    h += '<button type="button" class="btn ghost" id="cancel-import" data-act="cancelimport">ยกเลิก</button></div>';
+  } else {
+    if (importError) h += '<p class="hint" role="alert" style="margin:0 0 10px;color:var(--hold)">' + esc(importError) + '</p>';
+    h += '<div class="footer-actions" style="margin-top:0"><button type="button" class="btn ghost" id="export-data" data-act="exportdata">ส่งออกข้อมูลเป็นไฟล์</button>';
+    h += '<button type="button" class="btn ghost" id="pick-import" data-act="pickimport">นำเข้าข้อมูลจากไฟล์</button></div>';
+  }
+  h += '<input type="file" id="import-file" accept="application/json,.json" hidden></div>';
+  return h;
+}
+
+function exportData() {
+  var blob = new Blob([JSON.stringify(state, null, 1)], { type: 'application/json' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'samutwet-' + todayISO() + '.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+  toast('ส่งออกข้อมูลแล้ว');
+}
+
+/* แปลงข้อความไฟล์เป็นข้อมูลที่รอยืนยัน; คืนค่า true เมื่อไฟล์ใช้ได้ */
+function importFromText(text) {
+  var obj;
+  try { obj = JSON.parse(text); } catch (e) { obj = null; }
+  if (!obj || typeof obj !== 'object' || typeof obj.logs !== 'object' || obj.logs === null) {
+    importError = 'ไฟล์นี้ไม่ใช่ไฟล์สำรองของสมุดเวท';
+    pendingImport = null;
+    return false;
+  }
+  importError = '';
+  pendingImport = normalize(obj);
+  return true;
+}
+
+ACTIONS.exportdata = function () { exportData(); };
+ACTIONS.pickimport = function () { var f = $('import-file'); if (f) f.click(); };
+ACTIONS.cancelimport = function () { pendingImport = null; render(); };
+ACTIONS.applyimport = function () {
+  if (!pendingImport) return;
+  state = pendingImport; pendingImport = null;
+  state.t = Date.now();
+  localSave(); ui.day = firstOpenDay();
+  toast('นำเข้าข้อมูลแล้ว'); render();
+};
+
+document.addEventListener('change', function (e) {
+  if (e.target.id !== 'import-file') return;
+  var file = e.target.files && e.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function () { importFromText(String(reader.result)); render(); };
+  reader.onerror = function () { importError = 'อ่านไฟล์ไม่สำเร็จ'; render(); };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+/* ขอให้เบราว์เซอร์เก็บข้อมูลถาวร ไม่ลบเองเมื่อพื้นที่เต็ม */
+try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () { navigator.serviceWorker.register('./sw.js').catch(function () {}); });
+}
+
+render();
+setSync('local');
+</script>
+</body>
+</html>
